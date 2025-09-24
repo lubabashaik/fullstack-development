@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pokemon </title>
+    <link rel="stylesheet" href="./pokemon.css">
+  </head>
+  <body>
+    <div class="container">
+      <h1>Pokémon Finder</h1>
+      <div class="search-box">
+        <input
+          type="text"
+          id="pokemonInput"
+          placeholder="Enter Pokémon name or ID"
+        />
+        <button id="searchBtn">Search</button>
+      </div>
+      <p id="loading" class="loading">Loading...</p>
+      <div id="pokemonData" class="card"></div>
+    </div>
+
+    <script>
+      const pokemonContainer = document.getElementById("pokemonData");
+      const loadingText = document.getElementById("loading");
+
+      async function fetchPokemon(id) {
+        const response = await fetch(`https://pokeapi.co/api/v2/pokemon/${id}`);
+        const data = await response.json();
+        return {
+          name: data.name,
+          base_experience: data.base_experience,
+          order: data.order,
+          weight: data.weight,
+          types: data.types.map((typeInfo) => typeInfo.type.name),
+          image: data.sprites["front_shiny"],
+        };
+      }
+
+      async function loadPokemon() {
+        const promises = [];
+        for (let i = 1; i <= 50; i++) {
+          promises.push(fetchPokemon(i));
+        }
+
+        try {
+          const allPokemon = await Promise.all(promises);
+          console.log("allPokemon", allPokemon);
+          displayPokemon(allPokemon);
+        } catch (error) {
+          loadingText.textContent = "Failed to load Pokemon data.";
+          console.error(error);
+        }
+      }
+
+      function displayPokemon(PokemonList) {
+        loadingText.style.display = "none";
+
+        PokemonList.forEach((pokemon) => {
+          const card = document.createElement("div");
+          card.className = "pokemon-card";
+
+          card.innerHTML = `
+      <img class="Pokemon-image" src = ${pokemon.image} >
+    <h3>${pokemon.name.toUpperCase()}</h3>
+    <p><strong>Base Experience:</strong> ${pokemon.base_experience}</p>
+    <p><strong>Order:</strong> ${pokemon.order}</p>
+    <p><strong>Weight:</strong> ${pokemon.weight}</p>
+    <p><strong>Type:</strong> ${pokemon.types.join(", ")}</p>
+  `;
+
+          pokemonContainer.appendChild(card);
+        });
+      }
+
+      loadPokemon();
+    </script>
+  </body>
+</html>
